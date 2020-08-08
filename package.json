@@ -11,5 +11,8 @@
 	},
 	"keywords": [],
 	"author": "",
-	"license": "MIT"
+	"license": "MIT",
+	"dependencies": {
+		"commander": "^6.0.0"
+	}
 }
