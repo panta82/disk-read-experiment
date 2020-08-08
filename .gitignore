@@ -171,4 +171,4 @@ typings/
 ### Custom ###
 ##############
 
-# Your ignores here...
+misc/.~*
