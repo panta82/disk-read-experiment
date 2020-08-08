@@ -56,8 +56,13 @@ async function diskUsage(path, parallelism, debugLog = undefined) {
       return;
     }
 
-    if (!activeCount && !queue.length) {
-      // Nothing else to do, we are done
+    if (!queue.length) {
+      if (activeCount) {
+        // There are some pending ops, but nothing in the queue yet. Wait a bit.
+        return;
+      }
+
+      // Nothing in the queue and no active ops. We are done.
       completed = true;
       result.completedAt = new Date();
       resultPromise.resolve(result);
