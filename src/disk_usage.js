@@ -22,6 +22,7 @@ async function diskUsage(path, parallelism, debugLog = undefined) {
     size: 0,
     files: 0,
     directories: 0,
+    errorPaths: [],
   };
   let activeCount = 0;
   const queue = [];
@@ -83,10 +84,15 @@ async function diskUsage(path, parallelism, debugLog = undefined) {
         err => {
           // Error!
           activeCount--;
-          if (!completed) {
-            completed = true;
-            resultPromise.reject(err);
-          }
+          debugLog && debugLog('ERROR', op.path, err.message);
+          result.errorPaths.push(op.path);
+          tick();
+
+          // TODO Should we error out? Make this a switch?
+          // if (!completed) {
+          //   completed = true;
+          //   resultPromise.reject(err);
+          // }
         }
       );
 

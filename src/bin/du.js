@@ -28,9 +28,10 @@ Promise.resolve()
       }
       console.log(`       Path: ${report.path}`);
       console.log(`Parallelism: ${report.parallelism}`);
-      console.log(`    Elapsed: ${report.completedAt - report.startedAt}ms`);
       console.log(`      Files: ${report.files}`);
       console.log(`       Dirs: ${report.directories}`);
+      console.log(`     Errors: ${report.errorPaths.length}`);
+      console.log(`    Elapsed: ${report.completedAt - report.startedAt}ms`);
       console.log(
         `       Size: ${new Intl.NumberFormat('en-US').format(Math.round(report.size / 1000))}kb`
       );
