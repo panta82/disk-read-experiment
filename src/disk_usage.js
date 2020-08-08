@@ -72,6 +72,7 @@ async function diskUsage(path, parallelism, debugLog = undefined) {
     // Launch the next task
     const op = queue.pop();
     activeCount++;
+    result.maxActive = Math.max(activeCount, result.maxActive);
     Promise.resolve()
       .then(() => op.exec(op))
       .then(

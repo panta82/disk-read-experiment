@@ -2,11 +2,12 @@
 
 const { program } = require('commander');
 
-const { diskUsage } = require('./disk_usage');
+const { diskUsage } = require('../disk_usage');
 
 program
-  .name('disk-usage')
+  .name('du')
   .usage(`[params] [target path]`)
+  .description('Run a disk-usage task against given directory (or CWD) and print the report')
   .option('-p, --parallelism <value>', 'Determine how many ops will we try to do at one time.', '0')
   .option('-d, --debug', 'Print debug output')
   .parse();
