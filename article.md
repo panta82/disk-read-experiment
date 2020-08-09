@@ -2,7 +2,7 @@
 
 I was making a program that loads an arbitrary directory tree of images, gets their metadata and displays them on screen. The question cropped up, how do I do this in the most efficient manner possible?
 
-In a "naive" implementation, I could just `await` every single async call. Something along the line of:
+In a "naive" implementation, I could just `await` every single async call. Something along the lines of:
 
 ```javascript
 async function processDirectory(path) {
@@ -46,7 +46,7 @@ This seems better at a first glance, but is it really?
 
 While parallelism might work great for network calls, not every IO operation is born equal. Disk operations, like in this case, will naturally want to be synchronous, as disk's head can only physically be at one position over the platter. This limitation seems to apply even to the current generation of SSD-s, although it [might be lifted](https://qr.ae/pN2XIL) for the newer NVMe drives. So what's the point of parallelizing my code, if all my callbacks will get queued up in front of the disk anyway?
 
-Then again, maybe it makes sense to queue up as many operations as I can and let the OS schedule them in a smart way, instead of calling back into javascript code between each read and letting the disk sit idly in between.
+Then again, maybe it makes sense to queue up as many operations as I can, instead of calling back into javascript code between each read and letting the disk sit idly in the meantime.
 
 I didn't know which was better, and couldn't find any articles analyzing this. So I decided to do an experiment.
 
@@ -148,14 +148,16 @@ Here is what I got:
 
 It seems that limiting parallelism to 1 is the worst case scenario. There is probably a lot of empty waiting time between one IO call ends and another begins. So some kind of parallelism is definitely a good idea.
 
-Switching to 2 "threads" fixes the empty wait times, and we get from 10s down to the optimal time of around 6s. Adding more "threads" doesn't improve things further, which tells the dumbest thing speculated is what actually happens. Disk will perform one read at a time, and any additional read request will just queue up and wait their turn. I am slightly curious how this graph would look on an NVMe disk or fancy RAID equipment, but I haven't had any of those available for the test.
+Switching to 2 "threads" fixes the empty wait times, and we get from 10s down to the optimal time of around 6s. Adding more "threads" doesn't improve things further, which tells the dumbest thing speculated is what actually happens. Disk will perform one read at a time, and any additional read request will just queue up and wait their turn.
 
-The surprising thing was that performance degraded to around 8s at parallelisms above 1,000. I am not sure why that is. Perhaps we hit some kind of memory limit, causing node to allocate more wait queues?
+The surprising thing was that performance degraded to around 8s at parallelisms above 1,000. I am not sure why that is. Perhaps it hit some kind of memory limit, causing node to allocate more wait queues?
 
 ### The conclusion
 
 As suspected, you should never do an `await` in a loop, unless you know exactly what you're doing or performance isn't an issue.
 
-For a quick naive solution, uncontrolled `Promise.all` fanning is good enough. It will properly fill up disk queue, which seems to be the main performance bottleneck for this use case. 
+For a quick naive solution, uncontrolled `Promise.all` fanning is good enough. It will properly fill up disk wait queue, which seems to be the main performance bottleneck for this use case. 
 
-For a top quality solution, you will want to control your fanning and prevent too many callbacks from clogging up the system. You can implement some kind of job queue system, like above, or utilize some kind of async library, a la [async.js](https://www.npmjs.com/package/async) (I wish I had a better recommendation here, but I usually just roll out my own job runner). If you can control parallelism, I'd go with about the number of CPU-s, or something like 20. As long as you don't go over 1000 threads, you should be good to go.
+For a top quality solution, you will want to control your fanning and prevent too many callbacks from clogging up the system. You could implement a job queue system, like above, or utilize some kind of async library, a la [async.js](https://www.npmjs.com/package/async) (I wish I had a better recommendation here, but I usually just copy-paste my own job runner function between projects). If you can control parallelism, I'd go with about the number of CPU-s or double that. As long as you don't go over 1000 tasks, you should be good to go.
+
+If you want to try out the experiment on your own hardware, the code is [available on GitHub](https://github.com/panta82/disk-read-experiment). I'd be particularly curious to see how this graph looks on an NVMe or some performance-based RAID, since I haven't had any of those available for the test.
