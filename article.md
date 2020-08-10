@@ -97,7 +97,6 @@ async function diskUsage(path, parallelism) {
     // Launch the next task
     const op = queue.pop();
     activeCount++;
-    result.maxActive = Math.max(activeCount, result.maxActive);
     Promise.resolve()
       .then(() => op.exec(op))
       .catch(err => {
@@ -148,7 +147,7 @@ Here is what I got:
 
 It seems that limiting parallelism to 1 is the worst case scenario. There is probably a lot of empty waiting time between one IO call ends and another begins. So some kind of parallelism is definitely a good idea.
 
-Switching to 2 "threads" fixes the empty wait times, and we get from 10s down to the optimal time of around 6s. Adding more "threads" doesn't improve things further, which tells the dumbest thing speculated is what actually happens. Disk will perform one read at a time, and any additional read request will just queue up and wait their turn.
+Switching to 2 "threads" fixes the empty wait times, and we get from 10s down to the optimal time of around 6s. Adding more "threads" doesn't improve things further, which tells me the dumbest thing speculated is what actually happens. Disk will perform one read at a time, and any additional read requests will just queue up and wait their turn.
 
 The surprising thing was that performance degraded to around 8s at parallelisms above 1,000. I am not sure why that is. Perhaps it hit some kind of memory limit, causing node to allocate more wait queues?
 
@@ -160,4 +159,4 @@ For a quick naive solution, uncontrolled `Promise.all` fanning is good enough. I
 
 For a top quality solution, you will want to control your fanning and prevent too many callbacks from clogging up the system. You could implement a job queue system, like above, or utilize some kind of async library, a la [async.js](https://www.npmjs.com/package/async) (I wish I had a better recommendation here, but I usually just copy-paste my own job runner function between projects). If you can control parallelism, I'd go with about the number of CPU-s or double that. As long as you don't go over 1000 tasks, you should be good to go.
 
-If you want to try out the experiment on your own hardware, the code is [available on GitHub](https://github.com/panta82/disk-read-experiment). I'd be particularly curious to see how this graph looks on an NVMe or some performance-based RAID, since I haven't had any of those available for the test.
+If you want to try out the experiment on your own hardware, the code is [available on GitHub](https://github.com/panta82/disk-read-experiment). I'd be particularly curious to see how this graph looks on an NVMe or some performance-based RAID, since I haven't had any of those available to test with.

@@ -16,4 +16,6 @@ Then follow the instructions.
 
 ### Results
 
-See the blog article.
+See the blog article:
+
+https://pantas.net/parallelize-or-serialize-disk-access/
