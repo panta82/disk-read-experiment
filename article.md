@@ -22,7 +22,7 @@ async function processDirectory(path) {
 
 This kind of code is the simplest to write, but it will execute everything "synchronously", in one long chain of IO calls.
 
-To "fix" this, I could fan out to many hundreds of parallel "threads" by wrapping the files being processed into `Promis.all()` constructs. Like this:
+To "fix" this, I could fan out to many hundreds of parallel "threads" by wrapping the files being processed into `Promise.all()` constructs. Like this:
 
 ```javascript
 async function processDirectory(path) {
